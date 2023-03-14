@@ -1,7 +1,8 @@
 {
   "name": "@cross_transaction_verify_system/sdk",
   "version": "0.0.1",
-  "main": "index.js",
+  "main": "./lib/index.js",
+  "types": "./types/index.d.ts",
   "license": "MIT",
   "scripts": {
     "build": "tsc -b tsconfig.json",

@@ -7,15 +7,15 @@ import { ChainIdentifiers, ChainName, GraphQlClient, L3Provider, L3ProviderGroup
 import { BlockHead } from "./block";
 import { EpochConfig } from "./consensus";
 import { TransactionProof } from "./transaction-proof";
-import { TransactionHead, TransactionHeadIndex } from "./transaction-head";
-import { Digester, DigesterKeccak256 } from "../digester";
+import { TransactionHeadIndex } from "./transaction-head";
+import { Digester, DigesterKeccak256, solidityKeccak256 } from "../digester";
 
 import MerkleTree from "merkletreejs";
 import * as GQL from './gql';
 import CoreABI from "../abis";
 import abis from "../abis";
 
-class L3ChainComponent {
+export class L3ChainComponent {
     private _web3: Web3;
     get web3(): Web3 {
         return this._web3;
@@ -31,18 +31,18 @@ class L3ChainComponent {
         return this._graphClient;
     }
 
-    static fromHost(provider: L3Provider) {
-        return new L3ChainComponent(provider, true);
+    private _chianName: ChainName;
+    get chainName() {
+        return this._chianName;
     }
 
-    static fromSync(provider: L3Provider) {
-        return new L3ChainComponent(provider, false);
-    }
-
-    private constructor(provider: L3Provider, isHost: boolean = false) {
+    constructor(provider: L3Provider, chainName: ChainName = 'HOST') {
+        this._chianName = chainName;
         this._web3 = new Web3(provider.web3Provider);
         this._chainContract = new this._web3.eth.Contract(
-            isHost ? CoreABI.HostChain : CoreABI.SyncChain,
+            chainName == 'HOST'
+                ? CoreABI.HostChain
+                : CoreABI.SyncChain,
             provider.contractAddress
         )
         this._graphClient = new GraphQlClient(
@@ -59,19 +59,18 @@ export class L3Chain {
     constructor(providers: L3ProviderGroup) {
         this.digester = new DigesterKeccak256();
 
-        let keys = Object.keys(providers);
+        let keys = Object.keys(providers) as ChainName[];
         for (let chainName of keys) {
-            if (chainName == 'HOST') {
-                this.components[chainName] = L3ChainComponent.fromHost(providers[chainName]);
-            } else {
-                // @ts-ignore
-                this.components[chainName] = L3ChainComponent.fromSync(providers[chainName]);
-            }
+            this.components[chainName] = new L3ChainComponent(providers[chainName], chainName);
         }
     }
 
+    getChianNames(): ChainName[] {
+        return Object.keys(this.components) as ChainName[];
+    }
+
     getComponents(chainName: ChainName): L3ChainComponent {
-        return this.components[chainName];
+        return this.components[chainName]!;
     }
 
     async getBlockNumber(onChain: ChainName = 'HOST') {
@@ -132,7 +131,7 @@ export class L3Chain {
         let web3 = this.components[fromChain]!.web3;
         let sourceReceipt = await web3.eth.getTransactionReceipt(transactionHash);
         let sentLog = web3.eth.abi.decodeLog(
-            abis.IChain.find(item => item.name == 'SentL3Transaction').inputs!,
+            abis.IChain.find(item => item.name == 'SentL3Transaction')!.inputs!,
             sourceReceipt.logs[logIndex].data,
             sourceReceipt.logs[logIndex].topics.slice(1)
         );
@@ -141,8 +140,12 @@ export class L3Chain {
             sentLog.emiter,
             sentLog.value,
             sentLog.nonce,
+            sentLog.time,
             sentLog.datas
         )
+
+        console.log(sourceTransactionDataHash);
+
         // 查询该交易的L3区块
         let headIndex = await this.getTransactionHead(fromChain, transactionHash, sourceTransactionDataHash);
         let block = await this.getBlockByHash(headIndex.blockHash);
@@ -156,7 +159,7 @@ export class L3Chain {
         let leaf = this.digester.transactionHeadHash(
             ChainIdentifiers[fromChain], transactionHash, sourceTransactionDataHash
         )
-        const tree = new MerkleTree(leaves, ethers.keccak256, { sort: true });
+        const tree = new MerkleTree(leaves, solidityKeccak256, { sort: true });
 
         // 验证Merkle头一致
         if (block.block.transactionMerkleRoot.toLocaleLowerCase() !== tree.getHexRoot().toLocaleLowerCase()) {
@@ -171,6 +174,7 @@ export class L3Chain {
             value: sentLog.value,
             nonce: sentLog.nonce,
             datas: sentLog.datas,
+            time: sentLog.time,
             merkleProofs: tree.getHexProof(leaf)
         }
 
