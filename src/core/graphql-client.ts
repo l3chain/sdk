@@ -2,6 +2,9 @@ import * as http from "http";
 
 export class GraphQlClient {
     private _host: URL;
+    get host() {
+        return this._host;
+    }
 
     constructor(host: string | URL) {
         this._host = typeof host === 'string'

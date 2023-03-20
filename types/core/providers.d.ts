@@ -6,7 +6,7 @@ import { ChainName } from './chain-identifiers';
 export type L3Provider = {
     web3Provider: (HttpProvider | WebsocketProvider | IpcProvider);
     contractAddress: string;
-    graphDataBaseHost: string;
+    graphDataBaseHost?: string;
 };
 export type L3ProviderGroup = {
     [key in ChainName]: L3Provider;

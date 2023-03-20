@@ -1,19 +1,19 @@
 import BN = require('bn.js');
 import Web3 from "web3";
 
-import { ethers } from "ethers";
 import { Contract } from 'web3-eth-contract';
-import { ChainIdentifiers, ChainName, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
+import { ChainIdentifiers, ChainName, ChainNames, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
 import { BlockHead } from "./block";
 import { EpochConfig } from "./consensus";
 import { TransactionProof } from "./transaction-proof";
-import { TransactionHeadIndex } from "./transaction-head";
+import { TransactionHead, TransactionHeadIndex } from "./transaction-head";
 import { Digester, DigesterKeccak256, solidityKeccak256 } from "../digester";
 
 import MerkleTree from "merkletreejs";
 import * as GQL from './gql';
 import CoreABI from "../abis";
 import abis from "../abis";
+import { toNumber } from 'ethers';
 
 export class L3ChainComponent {
     private _web3: Web3;
@@ -26,7 +26,7 @@ export class L3ChainComponent {
         return this._chainContract;
     }
 
-    private _graphClient: GraphQlClient;
+    private _graphClient!: GraphQlClient;
     get graphClient(): GraphQlClient {
         return this._graphClient;
     }
@@ -36,18 +36,21 @@ export class L3ChainComponent {
         return this._chianName;
     }
 
-    constructor(provider: L3Provider, chainName: ChainName = 'HOST') {
+    constructor(provider: L3Provider, chainName: ChainName = "HOST") {
         this._chianName = chainName;
         this._web3 = new Web3(provider.web3Provider);
         this._chainContract = new this._web3.eth.Contract(
-            chainName == 'HOST'
+            chainName == "HOST"
                 ? CoreABI.HostChain
                 : CoreABI.SyncChain,
             provider.contractAddress
         )
-        this._graphClient = new GraphQlClient(
-            new URL(provider.graphDataBaseHost)
-        )
+
+        if (chainName == 'HOST') {
+            this._graphClient = new GraphQlClient(
+                new URL(provider.graphDataBaseHost!)
+            )
+        }
     }
 }
 
@@ -73,52 +76,68 @@ export class L3Chain {
         return this.components[chainName]!;
     }
 
-    async getBlockNumber(onChain: ChainName = 'HOST') {
-        return this.components[onChain]!.contract.methods.getBlockNumber().call();
+    async getBlockNumber(onChain: ChainName = "HOST"): Promise<number> {
+        return this.components[onChain]!.contract.methods.getBlockNumber().call().then(toNumber);
     }
 
     async getBlockNumberAll() {
-        let chainNames = Object.keys(this.components) as ChainName[];
         let blockNumbers: { [key in ChainName]?: number } = {}
-        for (let chainName of chainNames) {
-            blockNumbers[chainName] = await this.getBlockNumber(chainName);
+        for (let name of ChainNames) {
+            blockNumbers[name as ChainName] = await this.getBlockNumber(name as ChainName).catch(() => undefined);
         }
-        return blockNumbers;
+        return blockNumbers as { [key in ChainName]: number };
     }
 
-    async getBlockHeadByHash(blockHash: string, onChain: ChainName = 'HOST'): Promise<BlockHead> {
+    async getBlockHeadByHash(blockHash: string, onChain: ChainName = "HOST"): Promise<BlockHead> {
         return this.components[onChain]!.contract.methods.getBlockHeadByHash(blockHash).call();
     }
 
-    async getBlockHeadByNumber(blockNumber: number | string | BN, onChain: ChainName = 'HOST'): Promise<BlockHead> {
+    async getBlockHeadByNumber(blockNumber: number | string | BN, onChain: ChainName = "HOST"): Promise<BlockHead> {
         return this.components[onChain]!.contract.methods.getBlockHeadByNumber(blockNumber).call();
     }
 
-    async getEpochConfigAtIndex(epochIndex: number | string | BN, onChain: ChainName = 'HOST'): Promise<EpochConfig> {
-        return this.components[onChain]!.contract.methods.getEpochConfigAtIndex(epochIndex).call();
+    async getEpochConfigAtIndex(epochIndex: number | string | BN, onChain: ChainName = "HOST"): Promise<EpochConfig> {
+        return this.components[onChain]!.contract.methods.getEpochConfigAtIndex(epochIndex).call().then((rsp: any) => {
+            return {
+                epochIndex: toNumber(rsp.epochIndex),
+                verifiers: rsp.verifiers,
+                uncles: rsp.uncles,
+                verifierWeight: rsp.verifierWeight,
+                uncleWeight: toNumber(rsp.uncleWeight),
+                reachConsensusRatio: toNumber(rsp.reachConsensusRatio),
+                blockSize: rsp.blockSize,
+                baseFee: rsp.baseFee,
+                bytePrice: rsp.bytePrice
+            }
+        });
     }
 
-    async getBlockByNumber(blockNumber: number | string | BN): Promise<GQL.Block> {
+    async selectBlockByNumber(blockNumber: number | string | BN): Promise<GQL.Block> {
         let block = await this.getBlockHeadByNumber(blockNumber);
-        return this.getBlockByHash(block.hash);
+        return this.selectBlockByHash(block.hash);
     }
 
-    async getBlockByHash(blockHash: string): Promise<GQL.Block> {
+    async selectBlockByHash(blockHash: string): Promise<GQL.Block> {
         return this.components.HOST!.graphClient.query<GQL.Block>(GQL.getBlockByHash(blockHash));
     }
 
-    async getBlockProposeds(blockHash: string): Promise<GQL.BlockProposeds> {
-        return this.components.HOST!.graphClient.query<GQL.BlockProposeds>(GQL.getBlockProposeds(blockHash));
+    async selectBlockProposedsByHash(blockHash: string, onlyProposer?: string): Promise<GQL.BlockProposeds> {
+        return this.components.HOST!.graphClient.query<GQL.BlockProposeds>(GQL.getBlockProposedsByHash(blockHash, onlyProposer));
     }
 
-    async getTransactionHeads(fromChain: ChainName, transactionHash: string): Promise<TransactionHeadIndex[]> {
+    async selectBlockProposedsByNumber(blockNumber: number, onlyProposer?: string): Promise<GQL.BlockProposeds> {
+        let blockHead = await this.getBlockHeadByNumber(blockNumber);
+        return this.selectBlockProposedsByHash(blockHead.hash, onlyProposer);
+    }
+
+    async selectTransactionHeads(fromChain: ChainName, blockHash: string): Promise<TransactionHeadIndex[]> {
         return this.components.HOST!.graphClient.query<GQL.TransactionHead>(GQL.getTransactionHeads(
             ChainIdentifiers[fromChain],
-            transactionHash
+            blockHash
         )).then(rsp => rsp.transactionHeads);
     }
 
-    async getTransactionHead(fromChain: ChainName, transactionHash: string, sourceTransactionDataHash: string): Promise<TransactionHeadIndex> {
+    async selectTransactionHead(fromChain: ChainName, transactionHash: string, sourceTransactionDataHash: string): Promise<TransactionHeadIndex> {
         return this.components.HOST!.graphClient.query<GQL.TransactionHead>(GQL.getTransactionHead(
             ChainIdentifiers[fromChain],
             transactionHash,
@@ -126,7 +145,7 @@ export class L3Chain {
         )).then(rsp => rsp.transactionHeads[0]);
     }
 
-    async getL3TransactionProof(fromChain: ChainName, transactionHash: string, logIndex: number): Promise<TransactionProof> {
+    async createL3TransactionProof(fromChain: ChainName, transactionHash: string, logIndex: number): Promise<TransactionProof> {
         // 获取到L3交易发起网络的详细交易数据和日志数据
         let web3 = this.components[fromChain]!.web3;
         let sourceReceipt = await web3.eth.getTransactionReceipt(transactionHash);
@@ -147,8 +166,8 @@ export class L3Chain {
         console.log(sourceTransactionDataHash);
 
         // 查询该交易的L3区块
-        let headIndex = await this.getTransactionHead(fromChain, transactionHash, sourceTransactionDataHash);
-        let block = await this.getBlockByHash(headIndex.blockHash);
+        let headIndex = await this.selectTransactionHead(fromChain, transactionHash, sourceTransactionDataHash);
+        let block = await this.selectBlockByHash(headIndex.blockHash);
 
         // MerkleRoot
         let leaves = block.transactionHeads.map(head => this.digester.transactionHeadHash(
@@ -178,12 +197,46 @@ export class L3Chain {
             merkleProofs: tree.getHexProof(leaf)
         }
 
-        console.log(proof);
-
         return proof;
     }
 
     async verifyL3Transaction(proof: TransactionProof, onChain: ChainName): Promise<boolean> {
         return this.components[onChain]!.contract.methods.verifyL3Transaction(proof).call();
     }
+
+    async isAgreedProposals(onChain: ChainName, blockNumbers: number[], blockHashs: string[], proposal: string) {
+        let result = await this.components[onChain]?.contract.methods.isAgreedProposals(
+            blockNumbers,
+            blockHashs,
+            proposal
+        ).call();
+
+        return blockNumbers.map((blockNumber, index) => {
+            return {
+                blockNumber,
+                blockHash: blockHashs[index],
+                agreed: result[index]
+            }
+        })
+    }
+
+    async getBlockTransactionBreakPoint(blockHash: string): Promise<TransactionHead> {
+        return this.components.HOST!.contract.methods.getBlockTransactionBreakPoint(blockHash).call();
+    }
+
+    /**
+     * payabale方法,需要支付费用
+     * 
+     * l3chain.epochUpdate
+     *      .send({from:'0x....'})
+     *      .on('transactionHash', (hash) => {...})
+     *      .on('error',(err) => {...})
+     *      .then((receipt) => {...})
+     */
+    epochUpdate = () => this.components.HOST?.contract.methods.epochUpdate();
+
+    syncBlockHead = (onChain: ChainName, head: BlockHead[], sig: string[][]) => this.components[onChain]?.contract.methods.syncBlockHead(
+        head,
+        sig
+    );
 }

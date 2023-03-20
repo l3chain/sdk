@@ -5,7 +5,7 @@ import { ChainName, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
 import { BlockHead } from "./block";
 import { EpochConfig } from "./consensus";
 import { TransactionProof } from "./transaction-proof";
-import { TransactionHeadIndex } from "./transaction-head";
+import { TransactionHead, TransactionHeadIndex } from "./transaction-head";
 import * as GQL from './gql';
 export declare class L3ChainComponent {
     private _web3;
@@ -24,20 +24,38 @@ export declare class L3Chain {
     constructor(providers: L3ProviderGroup);
     getChianNames(): ChainName[];
     getComponents(chainName: ChainName): L3ChainComponent;
-    getBlockNumber(onChain?: ChainName): Promise<any>;
+    getBlockNumber(onChain?: ChainName): Promise<number>;
     getBlockNumberAll(): Promise<{
-        HOST?: number | undefined;
-        ETH?: number | undefined;
-        BSC?: number | undefined;
+        HOST: number;
+        ETH: number;
+        BSC: number;
     }>;
     getBlockHeadByHash(blockHash: string, onChain?: ChainName): Promise<BlockHead>;
     getBlockHeadByNumber(blockNumber: number | string | BN, onChain?: ChainName): Promise<BlockHead>;
     getEpochConfigAtIndex(epochIndex: number | string | BN, onChain?: ChainName): Promise<EpochConfig>;
-    getBlockByNumber(blockNumber: number | string | BN): Promise<GQL.Block>;
-    getBlockByHash(blockHash: string): Promise<GQL.Block>;
-    getBlockProposeds(blockHash: string): Promise<GQL.BlockProposeds>;
-    getTransactionHeads(fromChain: ChainName, transactionHash: string): Promise<TransactionHeadIndex[]>;
-    getTransactionHead(fromChain: ChainName, transactionHash: string, sourceTransactionDataHash: string): Promise<TransactionHeadIndex>;
-    getL3TransactionProof(fromChain: ChainName, transactionHash: string, logIndex: number): Promise<TransactionProof>;
+    selectBlockByNumber(blockNumber: number | string | BN): Promise<GQL.Block>;
+    selectBlockByHash(blockHash: string): Promise<GQL.Block>;
+    selectBlockProposedsByHash(blockHash: string, onlyProposer?: string): Promise<GQL.BlockProposeds>;
+    selectBlockProposedsByNumber(blockNumber: number, onlyProposer?: string): Promise<GQL.BlockProposeds>;
+    selectTransactionHeads(fromChain: ChainName, blockHash: string): Promise<TransactionHeadIndex[]>;
+    selectTransactionHead(fromChain: ChainName, transactionHash: string, sourceTransactionDataHash: string): Promise<TransactionHeadIndex>;
+    createL3TransactionProof(fromChain: ChainName, transactionHash: string, logIndex: number): Promise<TransactionProof>;
     verifyL3Transaction(proof: TransactionProof, onChain: ChainName): Promise<boolean>;
+    isAgreedProposals(onChain: ChainName, blockNumbers: number[], blockHashs: string[], proposal: string): Promise<{
+        blockNumber: number;
+        blockHash: string;
+        agreed: any;
+    }[]>;
+    getBlockTransactionBreakPoint(blockHash: string): Promise<TransactionHead>;
+    /**
+     * payabale方法,需要支付费用
+     *
+     * l3chain.epochUpdate
+     *      .send({from:'0x....'})
+     *      .on('transactionHash', (hash) => {...})
+     *      .on('error',(err) => {...})
+     *      .then((receipt) => {...})
+     */
+    epochUpdate: () => any;
+    syncBlockHead: (onChain: ChainName, head: BlockHead[], sig: string[][]) => any;
 }

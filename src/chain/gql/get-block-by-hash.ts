@@ -4,6 +4,9 @@ import { TransactionHead } from "../transaction-head";
 export type Block = {
   block: BlockHead & { epoch: number, time: string },
   transactionHeads: TransactionHead[]
+  signatures: {
+    signature: string
+  }[]
 }
 
 export const getBlockByHash = (blockHash: string) => `
@@ -20,6 +23,9 @@ export const getBlockByHash = (blockHash: string) => `
     sourceChain
     sourceTransactionDataHash
     sourceTransactionHash
+  }
+  signatures:blockProposeds(where:{hash: "${blockHash}", isVerifier:true}) {
+    signature,
   }
 }
 `;

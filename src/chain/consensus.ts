@@ -7,5 +7,9 @@ export interface EpochConfig {
     verifierWeight: number;
     uncleWeight: number;
     reachConsensusRatio: number;
-    transactionLimit: number
+    blockSize: number | string | BN,
+    baseFee: number | string | BN,
+    bytePrice: number | string | BN,
 }
+
+export const EpochBlockSize = 10;

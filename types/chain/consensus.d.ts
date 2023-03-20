@@ -1,3 +1,4 @@
+import BN = require('bn.js');
 export interface EpochConfig {
     epochIndex: number;
     verifiers: string[];
@@ -5,5 +6,8 @@ export interface EpochConfig {
     verifierWeight: number;
     uncleWeight: number;
     reachConsensusRatio: number;
-    transactionLimit: number;
+    blockSize: number | string | BN;
+    baseFee: number | string | BN;
+    bytePrice: number | string | BN;
 }
+export declare const EpochBlockSize = 10;
