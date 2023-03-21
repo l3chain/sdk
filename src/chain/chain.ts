@@ -3,10 +3,7 @@ import Web3 from "web3";
 
 import { Contract } from 'web3-eth-contract';
 import { ChainIdentifiers, ChainName, ChainNames, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
-import { BlockHead } from "./block";
-import { EpochConfig } from "./consensus";
-import { TransactionProof } from "./transaction-proof";
-import { TransactionHead, TransactionHeadIndex } from "./transaction-head";
+import { BlockHead, EpochConfig, TransactionHead, TransactionHeadIndex, TransactionProof } from "./entity";
 import { Digester, DigesterKeccak256, solidityKeccak256 } from "../digester";
 
 import MerkleTree from "merkletreejs";
@@ -61,7 +58,6 @@ export class L3Chain {
 
     constructor(providers: L3ProviderGroup) {
         this.digester = new DigesterKeccak256();
-
         let keys = Object.keys(providers) as ChainName[];
         for (let chainName of keys) {
             this.components[chainName] = new L3ChainComponent(providers[chainName], chainName);
@@ -89,45 +85,49 @@ export class L3Chain {
     }
 
     async getBlockHeadByHash(blockHash: string, onChain: ChainName = "HOST"): Promise<BlockHead> {
-        return this.components[onChain]!.contract.methods.getBlockHeadByHash(blockHash).call();
+        return this.components[onChain]!.contract.methods.getBlockHeadByHash(blockHash).call()
+            .then((rsp: any) => {
+                return {
+                    hash: rsp.hash,
+                    number: toNumber(rsp.number),
+                    time: toNumber(rsp.time),
+                    transactionMerkleRoot: rsp.transactionMerkleRoot,
+                    transactionRootHash: rsp.transactionRootHash,
+                }
+            });
     }
 
     async getBlockHeadByNumber(blockNumber: number | string | BN, onChain: ChainName = "HOST"): Promise<BlockHead> {
-        return this.components[onChain]!.contract.methods.getBlockHeadByNumber(blockNumber).call();
+        return this.components[onChain]!.contract.methods.getBlockHeadByNumber(blockNumber).call()
+            .then((rsp: any) => {
+                return {
+                    hash: rsp.hash,
+                    number: toNumber(rsp.number),
+                    time: toNumber(rsp.time),
+                    transactionMerkleRoot: rsp.transactionMerkleRoot,
+                    transactionRootHash: rsp.transactionRootHash,
+                }
+            });
     }
 
-    async getEpochConfigAtIndex(epochIndex: number | string | BN, onChain: ChainName = "HOST"): Promise<EpochConfig> {
+    async getEpochConfigAtIndex(epochIndex: number, onChain: ChainName = "HOST"): Promise<EpochConfig> {
         return this.components[onChain]!.contract.methods.getEpochConfigAtIndex(epochIndex).call().then((rsp: any) => {
             return {
                 epochIndex: toNumber(rsp.epochIndex),
                 verifiers: rsp.verifiers,
-                uncles: rsp.uncles,
-                verifierWeight: rsp.verifierWeight,
-                uncleWeight: toNumber(rsp.uncleWeight),
                 reachConsensusRatio: toNumber(rsp.reachConsensusRatio),
                 blockSize: rsp.blockSize,
-                baseFee: rsp.baseFee,
-                bytePrice: rsp.bytePrice
             }
         });
     }
 
-    async selectBlockByNumber(blockNumber: number | string | BN): Promise<GQL.Block> {
+    async selectBlockByNumber(blockNumber: number): Promise<GQL.Block> {
         let block = await this.getBlockHeadByNumber(blockNumber);
         return this.selectBlockByHash(block.hash);
     }
 
     async selectBlockByHash(blockHash: string): Promise<GQL.Block> {
-        return this.components.HOST!.graphClient.query<GQL.Block>(GQL.getBlockByHash(blockHash));
-    }
-
-    async selectBlockProposedsByHash(blockHash: string, onlyProposer?: string): Promise<GQL.BlockProposeds> {
-        return this.components.HOST!.graphClient.query<GQL.BlockProposeds>(GQL.getBlockProposedsByHash(blockHash, onlyProposer));
-    }
-
-    async selectBlockProposedsByNumber(blockNumber: number, onlyProposer?: string): Promise<GQL.BlockProposeds> {
-        let blockHead = await this.getBlockHeadByNumber(blockNumber);
-        return this.selectBlockProposedsByHash(blockHead.hash, onlyProposer);
+        return this.components.HOST!.graphClient.query<GQL.Block>(GQL.selectBlockByHash(blockHash));
     }
 
     async selectTransactionHeads(fromChain: ChainName, blockHash: string): Promise<TransactionHeadIndex[]> {
@@ -170,7 +170,7 @@ export class L3Chain {
         let block = await this.selectBlockByHash(headIndex.blockHash);
 
         // MerkleRoot
-        let leaves = block.transactionHeads.map(head => this.digester.transactionHeadHash(
+        let leaves = block.block.transactionHeads.map(head => this.digester.transactionHeadHash(
             head.sourceChain, head.sourceTransactionHash, head.sourceTransactionDataHash
         ));
 

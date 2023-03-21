@@ -2,10 +2,7 @@ import BN = require('bn.js');
 import Web3 from "web3";
 import { Contract } from 'web3-eth-contract';
 import { ChainName, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
-import { BlockHead } from "./block";
-import { EpochConfig } from "./consensus";
-import { TransactionProof } from "./transaction-proof";
-import { TransactionHead, TransactionHeadIndex } from "./transaction-head";
+import { BlockHead, EpochConfig, TransactionHead, TransactionHeadIndex, TransactionProof } from "./entity";
 import * as GQL from './gql';
 export declare class L3ChainComponent {
     private _web3;
@@ -32,11 +29,9 @@ export declare class L3Chain {
     }>;
     getBlockHeadByHash(blockHash: string, onChain?: ChainName): Promise<BlockHead>;
     getBlockHeadByNumber(blockNumber: number | string | BN, onChain?: ChainName): Promise<BlockHead>;
-    getEpochConfigAtIndex(epochIndex: number | string | BN, onChain?: ChainName): Promise<EpochConfig>;
-    selectBlockByNumber(blockNumber: number | string | BN): Promise<GQL.Block>;
+    getEpochConfigAtIndex(epochIndex: number, onChain?: ChainName): Promise<EpochConfig>;
+    selectBlockByNumber(blockNumber: number): Promise<GQL.Block>;
     selectBlockByHash(blockHash: string): Promise<GQL.Block>;
-    selectBlockProposedsByHash(blockHash: string, onlyProposer?: string): Promise<GQL.BlockProposeds>;
-    selectBlockProposedsByNumber(blockNumber: number, onlyProposer?: string): Promise<GQL.BlockProposeds>;
     selectTransactionHeads(fromChain: ChainName, blockHash: string): Promise<TransactionHeadIndex[]>;
     selectTransactionHead(fromChain: ChainName, transactionHash: string, sourceTransactionDataHash: string): Promise<TransactionHeadIndex>;
     createL3TransactionProof(fromChain: ChainName, transactionHash: string, logIndex: number): Promise<TransactionProof>;

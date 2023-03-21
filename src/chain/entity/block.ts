@@ -1,8 +1,6 @@
-import BN = require('bn.js');
-
 export interface BlockHead {
     hash: string;
-    number: BN | number | string;
+    number: number
     time: number;
     transactionMerkleRoot: string;
     transactionRootHash: string;

@@ -1,15 +1,15 @@
-import { BlockHead } from "../block";
+import { BlockHead } from "../entity/block";
+import { TransactionHead } from "../entity/transaction-head";
 
 export type BlockProposeds = {
-  block: BlockHead & { epoch: number, time: number },
+  block: BlockHead & { epoch: number, time: string, transactionHeads: TransactionHead[] },
   blockProposeds: { isVerifier: boolean, proposer: string, time: number, signature: string, hash: string }[]
 }
 
-export const getBlockProposedsByHash = (blockHash: string, onlyProposer?: string) =>
+export const selectBlockProposedsByHash = (blockHash: string, onlyProposer?: string) =>
   !onlyProposer
     ? `{
       block(id:"${blockHash}") {
-        epoch
         hash
         number
         time
@@ -21,12 +21,10 @@ export const getBlockProposedsByHash = (blockHash: string, onlyProposer?: string
         signature
         proposer
         isVerifier
-        hash
       }
     }`
     : `{
       block(id:"${blockHash}") {
-        epoch
         hash
         number
         time
@@ -37,7 +35,6 @@ export const getBlockProposedsByHash = (blockHash: string, onlyProposer?: string
         time
         signature
         proposer
-        isVerifier
         hash
       }
     }
@@ -45,7 +42,7 @@ export const getBlockProposedsByHash = (blockHash: string, onlyProposer?: string
   ;
 
 
-export const getBlockProposedsByNumber = (blockNumber: number, onlyProposer?: string) => {
+export const selectBlockProposedsByNumber = (blockNumber: number, onlyProposer?: string) => {
   let gql = !onlyProposer
     ? `
     {
@@ -84,6 +81,5 @@ export const getBlockProposedsByNumber = (blockNumber: number, onlyProposer?: st
       }
     }
     `
-    ;
   return gql;
 }

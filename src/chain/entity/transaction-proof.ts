@@ -1,5 +1,5 @@
 import BN = require('bn.js');
-import { ChainIdentifier } from '../core';
+import { ChainIdentifier } from '../../core';
 
 export interface TransactionProof {
     // 区块Hash

@@ -1,3 +1,3 @@
-export * from './get-block-by-hash';
-export * from './get-block-proposeds';
-export * from './get-transaction-head';
+export * from './select-block-by-hash';
+export * from './select-block-proposeds';
+export * from './select-transaction-head';

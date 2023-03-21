@@ -1,4 +1,4 @@
-import { TransactionHeadIndex } from "../transaction-head";
+import { TransactionHeadIndex } from "../entity/transaction-head";
 
 export type TransactionHead = {
   transactionHeads: TransactionHeadIndex[]
@@ -11,8 +11,6 @@ export const getTransactionHead = (sourceChain: string, sourceTransactionHash: s
       sourceTransactionDataHash
       sourceTransactionHash
       blockHash
-      blockNumber
-      epoch
     }
 }
 `;
