@@ -116,8 +116,9 @@ export class L3Chain {
                 epochIndex: toNumber(rsp.epochIndex),
                 verifiers: rsp.verifiers,
                 reachConsensusRatio: toNumber(rsp.reachConsensusRatio),
-                blockSize: rsp.blockSize,
-            }
+                blockInterval: toNumber(rsp.blockInterval),
+                blockSize: toNumber(rsp.blockSize),
+            } as EpochConfig
         });
     }
 

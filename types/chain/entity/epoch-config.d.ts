@@ -3,5 +3,6 @@ export interface EpochConfig {
     verifiers: string[];
     reachConsensusRatio: number;
     blockSize: number;
+    blockInterval: number;
 }
 export declare const EpochBlockSize = 10;
