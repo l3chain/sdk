@@ -1,5 +1,5 @@
 {
-  "name": "@cross_transaction_verify_system/sdk",
+  "name": "@l3/sdk",
   "version": "0.0.1",
   "main": "./lib/index.js",
   "types": "./types/index.d.ts",

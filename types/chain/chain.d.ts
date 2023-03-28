@@ -35,7 +35,7 @@ export declare class L3Chain {
     selectTransactionHeads(fromChain: ChainName, blockHash: string): Promise<TransactionHeadIndex[]>;
     selectTransactionHead(fromChain: ChainName, transactionHash: string, sourceTransactionDataHash: string): Promise<TransactionHeadIndex>;
     createL3TransactionProof(fromChain: ChainName, transactionHash: string, logIndex: number): Promise<TransactionProof>;
-    verifyL3Transaction(proof: TransactionProof, onChain: ChainName): Promise<boolean>;
+    verifyProof(proof: TransactionProof, onChain: ChainName): Promise<boolean>;
     isAgreedProposals(onChain: ChainName, blockNumbers: number[], blockHashs: string[], proposal: string): Promise<{
         blockNumber: number;
         blockHash: string;

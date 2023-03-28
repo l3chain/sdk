@@ -201,8 +201,8 @@ export class L3Chain {
         return proof;
     }
 
-    async verifyL3Transaction(proof: TransactionProof, onChain: ChainName): Promise<boolean> {
-        return this.components[onChain]!.contract.methods.verifyL3Transaction(proof).call();
+    async verifyProof(proof: TransactionProof, onChain: ChainName): Promise<boolean> {
+        return this.components[onChain]!.contract.methods.verify(proof).call();
     }
 
     async isAgreedProposals(onChain: ChainName, blockNumbers: number[], blockHashs: string[], proposal: string) {
