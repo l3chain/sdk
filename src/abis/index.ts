@@ -1,8 +1,8 @@
 import { AbiItem } from 'web3-utils';
 
-const SyncChainABI = require("@cross_transaction_verify_system/contracts/build/contracts/SyncChain.json").abi;
-const HostChainABI = require("@cross_transaction_verify_system/contracts/build/contracts/HostChain.json").abi;
-const IChainABI = require("@cross_transaction_verify_system/contracts/build/contracts/ICHain.json").abi;
+const SyncChainABI = require("../../abi/SyncChain.json");
+const HostChainABI = require("../../abi/HostChain.json");
+const IChainABI = require("../../abi/IChain.json");
 
 export default {
     IChain: IChainABI,
