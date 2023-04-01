@@ -1,5 +1,5 @@
 {
-  "name": "@l3/sdk",
+  "name": "@l3chain/sdk",
   "version": "0.0.1",
   "main": "./lib/index.js",
   "types": "./types/index.d.ts",
