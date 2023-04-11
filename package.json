@@ -1,6 +1,6 @@
 {
   "name": "@l3chain/sdk",
-  "version": "v0.0.3",
+  "version": "v0.0.4",
   "main": "./lib/index.js",
   "types": "./types/index.d.ts",
   "license": "MIT",
@@ -16,7 +16,7 @@
     "ui": "bdd"
   },
   "dependencies": {
-    "ethers": "^6.1.0",
+    "ethers": "5.6.6",
     "merkletreejs": "^0.3.9",
     "web3": "^1.8.2"
   },
