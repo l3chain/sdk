@@ -1,7 +1,8 @@
 export type ChainIdentifier = string;
-export type ChainName = "HOST" | "ETH" | "BSC";
+export type ChainName = string;
 export declare const ChainIdentifiers: {
-    [key in ChainName]: ChainIdentifier;
+    [key: ChainName]: ChainIdentifier;
 };
-export declare const ChainNames: ChainName[];
+export declare const ChainNames: string[];
 export declare const ChainNameFromIdentifier: (identifier: string) => string;
+export declare const registerChain: (chainName: ChainName, chianIdentifier: ChainIdentifier) => void;

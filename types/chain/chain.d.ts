@@ -12,7 +12,7 @@ export declare class L3ChainComponent {
     private _graphClient;
     get graphClient(): GraphQlClient;
     private _chianName;
-    get chainName(): ChainName;
+    get chainName(): string;
     constructor(provider: L3Provider, chainName?: ChainName);
 }
 export declare class L3Chain {
@@ -23,9 +23,7 @@ export declare class L3Chain {
     getComponents(chainName: ChainName): L3ChainComponent;
     getBlockNumber(onChain?: ChainName): Promise<number>;
     getBlockNumberAll(): Promise<{
-        HOST: number;
-        ETH: number;
-        BSC: number;
+        [x: string]: number;
     }>;
     getBlockHeadByHash(blockHash: string, onChain?: ChainName): Promise<BlockHead>;
     getBlockHeadByNumber(blockNumber: number | string | BN, onChain?: ChainName): Promise<BlockHead>;

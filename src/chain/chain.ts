@@ -2,7 +2,7 @@ import BN = require('bn.js');
 import Web3 from "web3";
 
 import { Contract } from 'web3-eth-contract';
-import { ChainIdentifiers, ChainName, ChainNames, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
+import { ChainIdentifiers, ChainName, ChainNames, GraphQlClient, L3Provider, L3ProviderGroup, registerChain } from "../core";
 import { BlockHead, EpochConfig, TransactionHead, TransactionHeadIndex, TransactionProof } from "./entity";
 import { Digester, DigesterKeccak256, solidityKeccak256 } from "../digester";
 
@@ -34,6 +34,10 @@ export class L3ChainComponent {
     }
 
     constructor(provider: L3Provider, chainName: ChainName = "HOST") {
+        if (!ChainNames.includes(chainName)) {
+            registerChain(chainName, provider.chainIdentifier)
+        }
+
         this._chianName = chainName;
         this._web3 = new Web3(provider.web3Provider);
         this._chainContract = new this._web3.eth.Contract(
@@ -163,9 +167,6 @@ export class L3Chain {
             sentLog.time,
             sentLog.datas
         )
-
-        console.log(sourceTransactionDataHash);
-
         // 查询该交易的L3区块
         let headIndex = await this.selectTransactionHead(fromChain, transactionHash, sourceTransactionDataHash);
         let block = await this.selectBlockByHash(headIndex.blockHash);
