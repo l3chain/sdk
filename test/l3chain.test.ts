@@ -1,30 +1,24 @@
 import Mocha from "mocha";
-import { L3Chain, L3ProvidersLocalHost, BlockHead, GraphQlClient } from '../src';
+import { L3Chain, GraphQlClient } from '../src';
+
+import * as sdk from "../src/digester";
+import { keccak256, solidityPackedKeccak256 } from "ethers";
 
 describe("L3Chain IChain API Test", function () {
 
     let l3chain: L3Chain;
     let qlClient: GraphQlClient;
 
-    before(() => {
-        l3chain = new L3Chain(L3ProvidersLocalHost)
-        qlClient = new GraphQlClient(L3ProvidersLocalHost.HOST.graphDataBaseHost)
-    })
-
     it("main", async function () {
 
-        await l3chain.getBlockByNumber(0).then(console.log);
+        let stypes = ["address", "uint256", "bytes32", "bool"]
+        let svalue = ["0xF582DD76bb327010a360f0E24369F898bfA6Cf47", "10000000", "0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494", "true"]
 
-        // await l3chain.getBlockProposeds('0x5a70158325399715fa079da19fb5fcb56e50b4dcdb9a28ddbe50611ec8ab28c4').then(console.log)
-        // let proof = await l3chain.getL3TransactionProof(
-        //     'HOST',
-        //     '0xb78720d0727d99353faff38acb9c0ff0b85044fd76425f90b3648e6c5064ac65',
-        //     0
-        // );
+        console.log(sdk.solidityPackedKeccak256(stypes, svalue))
+        console.log(solidityPackedKeccak256(stypes, svalue))
 
-        // console.log(`Verify On HOST: ${await l3chain.verifyL3Transaction(proof, 'HOST')}`);
-        // console.log(`Verify On ETH: ${await l3chain.verifyL3Transaction(proof, 'ETH')}`);
-        // console.log(`Verify On BSC: ${await l3chain.verifyL3Transaction(proof, 'BSC')}`);
+        console.log(sdk.solidityKeccak256("0x1337"))
+        console.log(keccak256("0x1337"))
 
     });
 

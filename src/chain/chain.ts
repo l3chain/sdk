@@ -10,7 +10,7 @@ import MerkleTree from "merkletreejs";
 import * as GQL from './gql';
 import CoreABI from "../abis";
 import abis from "../abis";
-import { toNumber } from 'ethers';
+import { toNumber } from 'web3-utils';
 
 export class L3ChainComponent {
     private _web3: Web3;

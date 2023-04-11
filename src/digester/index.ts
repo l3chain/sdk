@@ -1,9 +1,22 @@
 import BN = require('bn.js');
-import { ethers } from "ethers";
-import { ChainIdentifier } from '../core';
 
-export const solidityPackedKeccak256 = ethers.solidityPackedKeccak256;
-export const solidityKeccak256 = ethers.keccak256;
+import { ChainIdentifier } from '../core';
+import { encodePacked, keccak256 } from 'web3-utils';
+
+export const solidityPackedKeccak256 = (solidityTypes: string[], values: (string | BN | number)[]) => {
+    let mixeds = solidityTypes.map((t, i) => {
+        return {
+            t: t,
+            v: values[i]
+        }
+    });
+
+    return keccak256(encodePacked(
+        ...mixeds
+    )!);
+}
+
+export const solidityKeccak256 = keccak256;
 
 export interface Digester {
     sourceTransactionDataHash(
