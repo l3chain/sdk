@@ -16,8 +16,8 @@
     "ui": "bdd"
   },
   "dependencies": {
-    "merkletreejs": "^0.3.9",
-    "web3": "^1.8.2"
+    "merkletreejs": "0.3.9",
+    "web3": "1.8.2"
   },
   "devDependencies": {
     "ethers": "^6.1.0",
