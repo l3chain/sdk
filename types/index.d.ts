@@ -1,4 +1,4 @@
 export * from './chain';
 export * from './core';
 export * from './digester';
-export * from './abis';
+export * as L3ABI from './abis';
