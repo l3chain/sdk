@@ -6,4 +6,4 @@ export interface EpochConfig {
     blockInterval: number;
 }
 
-export const EpochBlockSize = 100;
+export const EpochBlockSize = 1000;
