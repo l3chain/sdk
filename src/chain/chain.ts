@@ -156,8 +156,8 @@ export class L3Chain {
         let sourceReceipt = await web3.eth.getTransactionReceipt(transactionHash);
         let sentLog = web3.eth.abi.decodeLog(
             abis.IChain.find(item => item.name == 'SentL3Transaction')!.inputs!,
-            sourceReceipt.logs[logIndex].data,
-            sourceReceipt.logs[logIndex].topics.slice(1)
+            sourceReceipt.logs.find(log => log.logIndex == logIndex)!.data,
+            sourceReceipt.logs.find(log => log.logIndex == logIndex)!.topics.slice(1),
         );
         // 计算sourceTransactionDataHash
         let sourceTransactionDataHash = this.digester.sourceTransactionDataHash(
