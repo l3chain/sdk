@@ -5,7 +5,7 @@ import MerkleTree from "merkletreejs";
 import { toNumber } from 'web3-utils';
 import { Contract } from 'web3-eth-contract';
 import { Digester, DigesterKeccak256, solidityKeccak256 } from "../digester";
-import { Chains, ChainName, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
+import { ChainName, ChainNames, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
 import { BlockHead, EpochConfig, TransactionHead, TransactionHeadIndex, TransactionProof } from "./entity";
 
 import * as GQL from './gql';
@@ -57,7 +57,7 @@ export class L3Chain {
 
     constructor(providers: L3ProviderGroup) {
         this.digester = new DigesterKeccak256();
-        for (let chainName of Object.keys(Chains) as ChainName[]) {
+        for (let chainName of ChainNames) {
             if (providers[chainName]) {
                 this.components[chainName] = new L3ChainComponent(providers.graphDataBaseHost, providers[chainName]!, chainName);
             }
