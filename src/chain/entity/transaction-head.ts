@@ -1,4 +1,4 @@
-import { ChainIdentifier, ChainNameFromIdentifier } from '../../core';
+import { ChainIdentifier } from '../../core';
 
 export type TransactionHead = {
     sourceChain: ChainIdentifier;

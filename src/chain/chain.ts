@@ -1,16 +1,15 @@
-import BN = require('bn.js');
 import Web3 from "web3";
-
-import { Contract } from 'web3-eth-contract';
-import { ChainIdentifiers, ChainName, ChainNames, GraphQlClient, L3Provider, L3ProviderGroup, registerChain } from "../core";
-import { BlockHead, EpochConfig, TransactionHead, TransactionHeadIndex, TransactionProof } from "./entity";
-import { Digester, DigesterKeccak256, solidityKeccak256 } from "../digester";
-
+import BN = require('bn.js');
 import MerkleTree from "merkletreejs";
-import * as GQL from './gql';
-import CoreABI from "../abis";
-import abis from "../abis";
+
 import { toNumber } from 'web3-utils';
+import { Contract } from 'web3-eth-contract';
+import { Digester, DigesterKeccak256, solidityKeccak256 } from "../digester";
+import { Chains, ChainName, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
+import { BlockHead, EpochConfig, TransactionHead, TransactionHeadIndex, TransactionProof } from "./entity";
+
+import * as GQL from './gql';
+import * as CoreABI from "../abis";
 
 export class L3ChainComponent {
     private _web3: Web3;
@@ -33,11 +32,7 @@ export class L3ChainComponent {
         return this._chianName;
     }
 
-    constructor(provider: L3Provider, chainName: ChainName = "HOST") {
-        if (!ChainNames.includes(chainName)) {
-            registerChain(chainName, provider.chainIdentifier)
-        }
-
+    constructor(graphDataBaseHost: string, provider: L3Provider, chainName: ChainName = "HOST") {
         this._chianName = chainName;
         this._web3 = new Web3(provider.web3Provider);
         this._chainContract = new this._web3.eth.Contract(
@@ -49,7 +44,7 @@ export class L3ChainComponent {
 
         if (chainName == 'HOST') {
             this._graphClient = new GraphQlClient(
-                new URL(provider.graphDataBaseHost!)
+                new URL(graphDataBaseHost)
             )
         }
     }
@@ -62,9 +57,10 @@ export class L3Chain {
 
     constructor(providers: L3ProviderGroup) {
         this.digester = new DigesterKeccak256();
-        let keys = Object.keys(providers) as ChainName[];
-        for (let chainName of keys) {
-            this.components[chainName] = new L3ChainComponent(providers[chainName], chainName);
+        for (let chainName of Object.keys(Chains) as ChainName[]) {
+            if (providers[chainName]) {
+                this.components[chainName] = new L3ChainComponent(providers.graphDataBaseHost, providers[chainName]!, chainName);
+            }
         }
     }
 
@@ -82,10 +78,10 @@ export class L3Chain {
 
     async getBlockNumberAll() {
         let blockNumbers: { [key in ChainName]?: number } = {}
-        for (let name of ChainNames) {
-            blockNumbers[name as ChainName] = await this.getBlockNumber(name as ChainName).catch(() => undefined);
+        for (let chainName of this.getChianNames()) {
+            blockNumbers[chainName] = await this.getBlockNumber(chainName).catch(() => undefined);
         }
-        return blockNumbers as { [key in ChainName]: number };
+        return blockNumbers;
     }
 
     async getBlockHeadByHash(blockHash: string, onChain: ChainName = "HOST"): Promise<BlockHead> {
@@ -137,14 +133,14 @@ export class L3Chain {
 
     async selectTransactionHeads(fromChain: ChainName, blockHash: string): Promise<TransactionHeadIndex[]> {
         return this.components.HOST!.graphClient.query<GQL.TransactionHead>(GQL.getTransactionHeads(
-            ChainIdentifiers[fromChain],
+            fromChain.toIdentifier(),
             blockHash
         )).then(rsp => rsp.transactionHeads);
     }
 
     async selectTransactionHead(fromChain: ChainName, transactionHash: string, sourceTransactionDataHash: string): Promise<TransactionHeadIndex> {
         return this.components.HOST!.graphClient.query<GQL.TransactionHead>(GQL.getTransactionHead(
-            ChainIdentifiers[fromChain],
+            fromChain.toIdentifier(),
             transactionHash,
             sourceTransactionDataHash
         )).then(rsp => rsp.transactionHeads[0]);
@@ -155,7 +151,7 @@ export class L3Chain {
         let web3 = this.components[fromChain]!.web3;
         let sourceReceipt = await web3.eth.getTransactionReceipt(transactionHash);
         let sentLog = web3.eth.abi.decodeLog(
-            abis.IChain.find(item => item.name == 'SentL3Transaction')!.inputs!,
+            CoreABI.IChain.find(item => item.name == 'SentL3Transaction')!.inputs!,
             sourceReceipt.logs.find(log => log.logIndex == logIndex)!.data,
             sourceReceipt.logs.find(log => log.logIndex == logIndex)!.topics.slice(1),
         );
@@ -178,7 +174,7 @@ export class L3Chain {
 
         // Leaf节点的数据必须是根据入参计算得出
         let leaf = this.digester.transactionHeadHash(
-            ChainIdentifiers[fromChain], transactionHash, sourceTransactionDataHash
+            fromChain.toIdentifier(), transactionHash, sourceTransactionDataHash
         )
         const tree = new MerkleTree(leaves, solidityKeccak256, { sort: true });
 
@@ -189,7 +185,7 @@ export class L3Chain {
 
         let proof: TransactionProof = {
             blockHash: headIndex.blockHash,
-            sourceChain: ChainIdentifiers[fromChain],
+            sourceChain: fromChain.toIdentifier(),
             sourceTransactionHash: transactionHash,
             emiter: sentLog.emiter,
             value: sentLog.value,

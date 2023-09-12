@@ -1,30 +1,66 @@
-export type ChainIdentifier = string;
+export type ChainIdentifier = "0x0000000000000000000000000000000000000000000000000000000000000000" | "0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c" | "0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494";
+export type ChainName = "HOST" | "ETH" | "BSC";
 
-export type ChainName = string;
-
-export const ChainIdentifiers: { [key: ChainName]: ChainIdentifier } = {
-    HOST: '0x0000000000000000000000000000000000000000000000000000000000000000'.toLowerCase(),
-    // ETH: '0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c'.toLowerCase(),
-    BSC: '0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494'.toLowerCase()
+export const Chains: Readonly<Record<ChainName, ChainIdentifier>> = {
+    "HOST": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "ETH": "0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c",
+    "BSC": "0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494"
 }
 
-export let ChainNames = Object.keys(ChainIdentifiers).map(k => k as ChainName);
-
-export const ChainNameFromIdentifier = (identifier: string) => {
-    let values = Object.values(ChainIdentifiers);
-    let index = values.findIndex((v) => v === identifier.toLowerCase());
-    if (index >= 0) {
-        return Object.keys(ChainIdentifiers)[index];
-    } else {
-        throw new Error(`unregiste chain with identifier:${identifier}`);
+declare global {
+    interface String {
+        toIdentifier(this: ChainName): ChainIdentifier
     }
 }
 
-export const registerChain = (chainName: ChainName, chianIdentifier: ChainIdentifier) => {
-    if (!ChainIdentifiers[chainName]) {
-        ChainIdentifiers[chainName] = chianIdentifier.startsWith('0x')
-            ? chianIdentifier.toLowerCase()
-            : `0x${chianIdentifier.toLowerCase()}`;
-        ChainNames = Object.keys(ChainIdentifiers).map(k => k as ChainName);
-    }
+String.prototype.toIdentifier = function () {
+    return {
+        HOST: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        ETH: '0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c',
+        BSC: '0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494'
+    }[this] as ChainIdentifier
 }
+
+// const ChainIdentifiers: Record<ChainNames, ChainIdentifier> = {
+//     HOST: '0x0000000000000000000000000000000000000000000000000000000000000000',
+//     ETH: '0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c',
+//     BSC: '0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494'
+// }
+
+// export const ChainNames: ChainName[] = ['HOST', 'ETH', 'BSC']
+// export const ChainIdentifiers: { [key in ChainName]: ChainIdentifier } = {
+//     HOST: '0x0000000000000000000000000000000000000000000000000000000000000000',
+//     ETH: '0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c',
+//     BSC: '0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494'
+// }
+
+// export const ChainNameFromIdentifier = (identifier: ChainIdentifier) => {
+//     let values = Object.values(ChainIdentifiers);
+
+
+//     let index = values.findIndex((v) => v === identifier.toLowerCase());
+//     if (index >= 0) {
+//         return Object.keys(ChainIdentifiers)[index];
+//     } else {
+//         throw new Error(`unregiste chain with identifier:${identifier}`);
+//     }
+// }
+
+// declare global {
+//     interface String {
+//         toChianName(): ChainName;
+//         toChianIdentifier(): ChainIdentifier;
+//     }
+// }
+
+// String.prototype.toChianName = () => {
+//     return ({
+//         '0x0000000000000000000000000000000000000000000000000000000000000000': 'HOST',
+//         '0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c': 'ETH',
+//         '0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494': 'BSC'
+//     } as { [key in ChainIdentifier]: ChainName })[this as unknown as ChainIdentifier];
+// }
+
+// String.prototype.toChianIdentifier = () => {
+//     return "0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c"
+// }

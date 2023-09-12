@@ -1,14 +1,16 @@
 {
   "name": "@l3chain/sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "./lib/index.js",
   "types": "./types/index.d.ts",
   "license": "MIT",
+  "repository": "https://github.com/l3chain/sdk.git",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "test": "cross-env TS_NODE_PROJECT='test/tsconfig.test.json' mocha test/**/**.test.ts"
   },
   "mocha": {
+    "timeout": 100000,
     "require": [
       "ts-node/register",
       "tsconfig-paths/register"

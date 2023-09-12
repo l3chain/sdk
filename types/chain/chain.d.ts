@@ -1,5 +1,5 @@
-import BN = require('bn.js');
 import Web3 from "web3";
+import BN = require('bn.js');
 import { Contract } from 'web3-eth-contract';
 import { ChainName, GraphQlClient, L3Provider, L3ProviderGroup } from "../core";
 import { BlockHead, EpochConfig, TransactionHead, TransactionHeadIndex, TransactionProof } from "./entity";
@@ -12,8 +12,8 @@ export declare class L3ChainComponent {
     private _graphClient;
     get graphClient(): GraphQlClient;
     private _chianName;
-    get chainName(): string;
-    constructor(provider: L3Provider, chainName?: ChainName);
+    get chainName(): ChainName;
+    constructor(graphDataBaseHost: string, provider: L3Provider, chainName?: ChainName);
 }
 export declare class L3Chain {
     private digester;
@@ -23,7 +23,9 @@ export declare class L3Chain {
     getComponents(chainName: ChainName): L3ChainComponent;
     getBlockNumber(onChain?: ChainName): Promise<number>;
     getBlockNumberAll(): Promise<{
-        [x: string]: number;
+        HOST?: number | undefined;
+        ETH?: number | undefined;
+        BSC?: number | undefined;
     }>;
     getBlockHeadByHash(blockHash: string, onChain?: ChainName): Promise<BlockHead>;
     getBlockHeadByNumber(blockNumber: number | string | BN, onChain?: ChainName): Promise<BlockHead>;
