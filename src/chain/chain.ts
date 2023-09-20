@@ -55,11 +55,11 @@ export class L3Chain {
     private digester: Digester
     private components: { [key in ChainName]?: L3ChainComponent } = {};
 
-    constructor(providers: L3ProviderGroup) {
+    constructor(group: L3ProviderGroup) {
         this.digester = new DigesterKeccak256();
         for (let chainName of ChainNames) {
-            if (providers[chainName]) {
-                this.components[chainName] = new L3ChainComponent(providers.graphDataBaseHost, providers[chainName]!, chainName);
+            if (group.providers[chainName]) {
+                this.components[chainName] = new L3ChainComponent(group.graphDataBaseHost, group.providers[chainName]!, chainName);
             }
         }
     }

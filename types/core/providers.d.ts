@@ -9,6 +9,5 @@ export type L3Provider = {
 };
 export type L3ProviderGroup = {
     graphDataBaseHost: string;
-} & {
-    [key in ChainName]?: L3Provider;
+    providers: Record<ChainName, L3Provider>;
 };

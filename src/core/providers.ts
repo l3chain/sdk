@@ -9,7 +9,7 @@ export type L3Provider = {
     contractAddress: string,
 }
 
-export type L3ProviderGroup = { graphDataBaseHost: string } &
-    {
-        [key in ChainName]?: L3Provider
-    };
+export type L3ProviderGroup = {
+    graphDataBaseHost: string,
+    providers: Record<ChainName, L3Provider>
+}

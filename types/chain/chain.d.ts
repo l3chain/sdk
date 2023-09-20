@@ -18,7 +18,7 @@ export declare class L3ChainComponent {
 export declare class L3Chain {
     private digester;
     private components;
-    constructor(providers: L3ProviderGroup);
+    constructor(group: L3ProviderGroup);
     getChianNames(): ChainName[];
     getComponents(chainName: ChainName): L3ChainComponent;
     getBlockNumber(onChain?: ChainName): Promise<number>;
