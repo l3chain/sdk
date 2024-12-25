@@ -1,9 +1,20 @@
-export type ChainIdentifier = "0x0000000000000000000000000000000000000000000000000000000000000000" | "0xc2e8f644f9552ee96d7e42879092234f30d7bdd58babf5345f2dd5eb2847ac4c" | "0xe1430158eac8c4aa6a515be5ef2c576a7a9559adbd0c276cd9573854e0473494";
-export type ChainName = "HOST" | "ETH" | "BSC";
-export declare const ChainNames: Readonly<ChainName[]>;
-export declare const ChainIdentifiers: Readonly<Record<ChainName, ChainIdentifier>>;
+export type ChainIdentifier = string;
+export type ChainName = string;
+declare function initialize(config?: Record<ChainName, ChainIdentifier>): void;
 declare global {
     interface String {
         toIdentifier(this: ChainName): ChainIdentifier;
     }
 }
+export declare const getChainIdentifier: (chainName: ChainName) => ChainIdentifier | undefined;
+export declare const isKnownChain: (chainName: string) => boolean;
+export interface ChainRegistry {
+    readonly current: Record<ChainName, ChainIdentifier>;
+    register(name: string, identifier: ChainIdentifier): void;
+}
+export declare const DefaultChainIdentifiers: ChainRegistry;
+export declare const ChainNames: ChainName[];
+export declare const ChainIdentifiers: ChainIdentifier[];
+export declare const initializeChains: typeof initialize;
+export declare const DEFAULT_CHAINS: Readonly<Record<string, string>>;
+export {};
