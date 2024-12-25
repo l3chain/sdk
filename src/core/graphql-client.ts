@@ -1,54 +1,58 @@
-import * as http from "http";
+export class GraphQLError extends Error {
+    constructor(
+        message: string,
+        public readonly code?: string,
+        public readonly originalError?: unknown
+    ) {
+        super(message);
+        this.name = 'GraphQLError';
+    }
+}
 
 export class GraphQlClient {
-    private _host: URL;
-    get host() {
-        return this._host;
-    }
+    constructor(private readonly endpoint: string) { }
 
-    constructor(host: string | URL) {
-        this._host = typeof host === 'string'
-            ? this._host = new URL(host)
-            : host;
-    }
-
-    async query<Response>(gql: string) {
-        return new Promise<Response>((resolve, reject) => {
-            const postData = Buffer.from(JSON.stringify({
-                query: gql
-            }), 'utf8');
-
-            const options = {
-                hostname: this._host.hostname,
-                port: this._host.port,
-                path: this._host.pathname,
+    async query(query: string, variables?: Record<string, unknown>): Promise<any> {
+        try {
+            const response = await fetch(this.endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(postData)
-                }
-            };
-
-            const req = http.request(options, (res) => {
-                let chunks: Buffer[] = [];
-                res.setEncoding('utf8');
-                res.on('data', (chunk) => {
-                    chunks.push(Buffer.from(chunk, 'utf8'));
-                });
-                res.on('end', () => {
-                    let body = Buffer.concat(chunks);
-                    // @ts-ignore
-                    resolve(JSON.parse(body.toString()).data);
-                });
+                },
+                body: JSON.stringify({ query, variables }),
             });
 
-            req.on('error', (e) => {
-                console.error(`problem with request: ${e.message}`);
-                reject(e);
-            });
+            if (!response.ok) {
+                throw new GraphQLError(
+                    `HTTP error: ${response.status}`,
+                    'HTTP_ERROR',
+                    await response.text()
+                );
+            }
 
-            req.write(postData);
-            req.end();
-        })
+            const data = await response.json();
+            return data.data;
+
+        } catch (error) {
+            if (error instanceof GraphQLError) {
+                throw error;
+            }
+
+            // 网络错误
+            if (error instanceof TypeError) {
+                throw new GraphQLError(
+                    'Network error occurred',
+                    'NETWORK_ERROR',
+                    error
+                );
+            }
+
+            // 其他未知错误
+            throw new GraphQLError(
+                'An unexpected error occurred',
+                'UNKNOWN_ERROR',
+                error
+            );
+        }
     }
 }
