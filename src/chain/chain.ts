@@ -57,9 +57,15 @@ export class L3ChainComponent extends EventEmitter {
             provider.contractAddress
         )
 
-        this._provider.on('error', (error: any) => {
-            this.emit('error', error);
-        });
+        if ('engine' in this._provider) {
+            this._provider.engine.on('error', (error: any) => {
+                this.emit('error', error);
+            });
+        } else if ('on' in this._provider) {
+            this._provider.on('error', (error: any) => {
+                this.emit('error', error);
+            });
+        }
     }
 
     on<K extends keyof L3ProviderErrorEvent>(event: K, listener: L3ProviderErrorEvent[K]): this {

@@ -12,14 +12,14 @@ export class GraphQLError extends Error {
 export class GraphQlClient {
     constructor(private readonly endpoint: string) { }
 
-    async query(query: string, variables?: Record<string, unknown>): Promise<any> {
+    async query(query: string): Promise<any> {
         try {
             const response = await fetch(this.endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ query, variables }),
+                body: JSON.stringify({ query }),
             });
 
             if (!response.ok) {
@@ -34,6 +34,7 @@ export class GraphQlClient {
             return data.data;
 
         } catch (error) {
+
             if (error instanceof GraphQLError) {
                 throw error;
             }

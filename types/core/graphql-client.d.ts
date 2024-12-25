@@ -6,5 +6,5 @@ export declare class GraphQLError extends Error {
 export declare class GraphQlClient {
     private readonly endpoint;
     constructor(endpoint: string);
-    query(query: string, variables?: Record<string, unknown>): Promise<any>;
+    query(query: string): Promise<any>;
 }
